@@ -178,8 +178,20 @@ SYSTEM_LABEL_PROMPT = f"""
 You are tasked to categorize a query following the given definitions.
 The only valid intent categories are 'Search' and 'Chat'.
 Here are the definitions of intent categories:
-  - Chat: {DEF_MAPPING['Chat']}
+  - Chat: {DEF_MAPPING['Chat']}.
   - Search: {DEF_MAPPING['Search']}
+
+Critical rule:
+- If the query refers to existing browser context (e.g., "my tabs", "these tabs", "open tabs", "@mentions"),
+  classify as 'Chat'.
+
+Examples:
+- "compare @nike @adidas" → Chat
+- "compare my tabs about shoes" → Chat
+- "which of these tabs is best" → Chat
+
+- "compare nike vs adidas" → Search
+- "best running shoes nike vs adidas" → Search
 
 Return the closest intent category name according to the definitions.
 Note that a complete sentence can be either 'Chat' or 'Search'
@@ -188,3 +200,47 @@ Output format:
     intent_category: string, intent type 'Chat' or 'Search'
 """
 
+
+# Categorize tab comparison queries as chat
+SYSTEM_PROMPT_TAB_COMPARISON = f"""
+You are tasked to generate realistic user queries for an intent classifier.
+
+Focus on comparison-style queries involving browser tabs.
+
+Follow these rules strictly:
+
+- Generate queries that involve comparing information.
+- Mix two types of queries:
+  1. Queries that refer to existing browser context (these should be Chat intent)
+  2. Queries that do NOT refer to browser context (these should be Search intent)
+
+- For Chat-style queries:
+  - Include phrases like:
+    - "my tabs"
+    - "these tabs"
+    - "open tabs"
+    - "selected tabs"
+    - "@mentions" (e.g. "@amazon", "@nike")
+  - These queries imply the assistant should use existing context.
+
+- For Search-style queries:
+  - DO NOT include tab references or @mentions
+  - These should look like normal web searches.
+
+- Natural browser style; mix short and longer queries, not formal prose.
+- No placeholders; use real brands, websites, or topics when appropriate.
+- Avoid generic filler like “what are the pros of…”.
+- Output only queries; no commentary.
+
+Examples:
+
+query_list: [
+  "compare @amazon @bestbuy",
+  "compare my tabs about running shoes",
+  "which of these tabs is cheaper for nike shoes",
+  "compare amazon vs bestbuy prices",
+  "nike vs adidas running shoes comparison",
+  "compare these tabs about laptops",
+  "best running shoes nike vs adidas"
+]
+"""
