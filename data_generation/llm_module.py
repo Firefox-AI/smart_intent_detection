@@ -1,7 +1,7 @@
 from openai import OpenAI
 from pydantic import BaseModel
 
-from prompts import SYSTEM_LABEL_PROMPT, SYSTEM_BATCH_LABEL_PROMPT
+from prompts import SYSTEM_LABEL_PROMPT, SYSTEM_BATCH_LABEL_PROMPT, SYSTEM_TRANSLATE_PROMPT
 
 
 class LabelFormat(BaseModel):
@@ -14,6 +14,9 @@ class BatchLabelFormat(BaseModel):
 
 class GenerationFormat(BaseModel):
     query_list: list[str]
+
+class TranslationFormat(BaseModel):
+    translation: str
 
 
 client = OpenAI()
@@ -75,4 +78,23 @@ def generate_queries(args_list):
 
     response = completion.choices[0].message.parsed
     return response.query_list
+
+
+def translate_query(query, lang):
+    completion = client.chat.completions.parse(
+        model=MODEL_NAME,
+        messages=[
+            {"role": "system", "content": SYSTEM_TRANSLATE_PROMPT.format(lang)},
+            {"role": "user", "content": f"Query: {query}"},
+        ],
+        response_format=TranslationFormat,
+    )
+
+    response = completion.choices[0].message.parsed
+    ret = response.translation
+    if ret.endswith("?"):
+        ret = ret[:-1]
+    ret = ret.strip()
+
+    return ret
 

@@ -16,6 +16,7 @@ from prompts import (
     SYSTEM_PROMPT_CHAT,
     SYSTEM_PROMPT_CHAT_IMPERATIVE,
     SYSTEM_PROMPT_CHAT_AI_COMMON,
+    SYSTEM_PROMPT_TAB_COMPARISON,
     DEF_CHAT_AI_COMMON,
 )
 
@@ -47,7 +48,8 @@ DATA_FILE_NAMES = {
     "ai_tool_common_query_task_management": "ai_tool_common_query_task_management.csv",
     "ai_tool_common_query_discussion": "ai_tool_common_query_discussion.csv",
     "ai_tool_common_query_casual_chat": "ai_tool_common_query_casual_chat.csv",
-    "ai_tool_common_query_system_setting": "ai_tool_common_query_system_setting.csv"
+    "ai_tool_common_query_system_setting": "ai_tool_common_query_system_setting.csv",
+    "comparison": "comparison.csv",
 }
 
 
@@ -155,11 +157,13 @@ def label_raw_data():
     for key, file_path in DATA_FILE_NAMES.items():
         print(f"Labeling {key} subset.")
         df = pd.read_csv(os.path.join(RAW_DATA_DIR, file_path))
-        if not key.startswith("ai_tool_common_query"):
+        if not key.startswith("comparison"):
             continue
         if key in ["general", 'chat', 'imperative_chat']:
             df['Label'] = get_labels_multiprocess_no_batch(df, max_workers=32)
         if key.startswith("ai_tool_common_query"):
+            df['Label'] = get_labels_multiprocess_no_batch(df, max_workers=32)
+        if key in ["comparison"]:
             df['Label'] = get_labels_multiprocess_no_batch(df, max_workers=32)
         else:
             df['Label'] = ['Search'] * df.shape[0]
@@ -222,35 +226,38 @@ def main():
         queries_to_avoid = set(json.load(f))
 
     #generate_general_queries
-    generate_queries_multiprocess(SYSTEM_PROMPT_GENERAL, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['general']))
+    #generate_queries_multiprocess(SYSTEM_PROMPT_GENERAL, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['general']))
 
     # only generate chat intent queries
-    generate_queries_multiprocess(SYSTEM_PROMPT_CHAT, 100000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['chat']))
+    #generate_queries_multiprocess(SYSTEM_PROMPT_CHAT, 100000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['chat']))
 
     #generate_phrase_queries
-    generate_queries_multiprocess(SYSTEM_PROMPT_PHRASE, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['phrases']))
+    #generate_queries_multiprocess(SYSTEM_PROMPT_PHRASE, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['phrases']))
 
     #generate_time_sensitive_queries
-    generate_queries_multiprocess(SYSTEM_PROMPT_TIME_SENSITIVE, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['time_sensitive']))
+    #generate_queries_multiprocess(SYSTEM_PROMPT_TIME_SENSITIVE, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['time_sensitive']))
 
     #generate_dynamic_information_queries
-    generate_queries_multiprocess(SYSTEM_PROMPT_DYNAMIC, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['dynamic']))
+    #generate_queries_multiprocess(SYSTEM_PROMPT_DYNAMIC, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['dynamic']))
 
     #generate_short_queries
-    generate_queries_multiprocess(SYSTEM_PROMPT_SHORT, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['short']))
+    #generate_queries_multiprocess(SYSTEM_PROMPT_SHORT, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['short']))
 
     #generate_missed_navigations
-    generate_queries_multiprocess(SYSTEM_PROMPT_MISSED_URL, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['missed_navigation']))
+    #generate_queries_multiprocess(SYSTEM_PROMPT_MISSED_URL, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['missed_navigation']))
 
     #generate imperative form chat queries
-    generate_queries_multiprocess(SYSTEM_PROMPT_CHAT_IMPERATIVE, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['imperative_chat']), queries_to_avoid=queries_to_avoid)
+    #generate_queries_multiprocess(SYSTEM_PROMPT_CHAT_IMPERATIVE, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['imperative_chat']), queries_to_avoid=queries_to_avoid)
+
+    #generate tab comparison queries
+    #generate_queries_multiprocess(SYSTEM_PROMPT_TAB_COMPARISON, 20000, os.path.join(RAW_DATA_DIR, DATA_FILE_NAMES['comparison']))
 
     #generate common types of AI tool queries specifically
-    for key, csv_path in DATA_FILE_NAMES.items():
-        if not key.startswith("ai_tool_common_query"):
-            continue
-        system_prompt = SYSTEM_PROMPT_CHAT_AI_COMMON.format(DEF_CHAT_AI_COMMON[key])
-        generate_queries_multiprocess(system_prompt, 2000, os.path.join(RAW_DATA_DIR, csv_path), queries_to_avoid=queries_to_avoid)
+    # for key, csv_path in DATA_FILE_NAMES.items():
+    #     if not key.startswith("ai_tool_common_query"):
+    #         continue
+    #     system_prompt = SYSTEM_PROMPT_CHAT_AI_COMMON.format(DEF_CHAT_AI_COMMON[key])
+    #     generate_queries_multiprocess(system_prompt, 2000, os.path.join(RAW_DATA_DIR, csv_path), queries_to_avoid=queries_to_avoid)
 
     label_raw_data()
 

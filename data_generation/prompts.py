@@ -244,3 +244,10 @@ query_list: [
   "best running shoes nike vs adidas"
 ]
 """
+
+SYSTEM_TRANSLATE_PROMPT = """
+You are tasked to translate english browser queries into {}
+Example:
+  Query: Hello world
+  translation: Bonjour le monde
+"""
